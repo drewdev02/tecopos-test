@@ -4,7 +4,6 @@ Initial bootstrap for the `tecopos-banking-mvp` change using a pnpm workspace an
 
 ## Public deployment
 
-> Replace these placeholders with your real deployed URLs before final delivery.
 
 - Gateway API (public): `https://tocopost.andrewdevstudio.tech`
 - Swagger (public): `https://tocopost.andrewdevstudio.tech/api/docs`
@@ -19,7 +18,7 @@ Client / Bank Consumer
    - JWT validation
    - Global rate limit
    - Internal HMAC signing
-      |                         
+      |
       +-------> [SSO :3001] -----> [Postgres SSO]
       |           - register/login
       |
@@ -27,6 +26,21 @@ Client / Bank Consumer
                   - accounts/transactions (MockAPI proxy)
                   - webhook CRUD
                   - verifies gateway signed headers
+```
+
+## Simple modules and implemented flows
+
+```mermaid
+flowchart TD
+    C[Cliente / App] --> G[Gateway API :3000\n- Valida JWT\n- Rate limit\n- Firma interna HMAC]
+
+    G --> S[SSO API :3001\n- Register/Login]
+    S --> PS[(Postgres SSO)]
+
+    G --> B[Bank API :3002\n- Cuentas/Transacciones\n- Webhooks CRUD\n- Verifica firma interna]
+    B --> PB[(Postgres Bank)]
+
+    B -. modo hybrid/mockapi .-> M[MockAPI Externo]
 ```
 
 ## Monorepo structure
@@ -61,7 +75,7 @@ Client / Bank Consumer
 
    ```bash
     pnpm build
-    ```
+   ```
 
 ### Docker Compose (local infra + apps)
 
