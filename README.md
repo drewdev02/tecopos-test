@@ -90,6 +90,16 @@ Initial bootstrap for the `tecopos-banking-mvp` change using a pnpm workspace an
 - SSO: `GET http://localhost:3001/health`
 - Bank Accounts: `GET http://localhost:3002/health`
 
+## Security: Gateway → Bank trust boundary
+
+- Bank endpoints under `/accounts*` and `/webhooks*` trust identity **only** when internal headers are signed by Gateway.
+- Gateway forwards `X-User-Id` together with:
+  - `X-Internal-Timestamp` (unix epoch seconds)
+  - `X-Internal-Signature` (HMAC-SHA256 over `userId:method:path:timestamp`)
+- Shared secret: `INTERNAL_SIGNATURE_SECRET`.
+- Bank rejects missing/invalid/expired signatures with `401`.
+- Timestamp freshness window is configurable via `INTERNAL_SIGNATURE_MAX_SKEW_SECONDS` (recommended `60-120`).
+
 ## Notes
 
 - This is foundation scaffolding only (no auth/business/DB features yet).

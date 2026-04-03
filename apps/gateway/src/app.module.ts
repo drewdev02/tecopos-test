@@ -9,6 +9,7 @@ import { BankController } from './proxy/bank.controller.js';
 import { GatewayProxyService } from './proxy/gateway-proxy.service.js';
 import { HealthController } from './health/health.controller.js';
 import { GatewayJwtGuard } from './security/gateway-jwt.guard.js';
+import { InternalSignerService } from './security/internal-signer.service.js';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { GatewayJwtGuard } from './security/gateway-jwt.guard.js';
         JWT_SECRET: Joi.string().min(16).required(),
         SSO_SERVICE_URL: Joi.string().uri({ scheme: ['http', 'https'] }).required(),
         BANK_SERVICE_URL: Joi.string().uri({ scheme: ['http', 'https'] }).required(),
+        INTERNAL_SIGNATURE_SECRET: Joi.string().min(16).required(),
       }),
     }),
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
@@ -33,6 +35,7 @@ import { GatewayJwtGuard } from './security/gateway-jwt.guard.js';
   controllers: [HealthController, AuthController, BankController],
   providers: [
     GatewayProxyService,
+    InternalSignerService,
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,

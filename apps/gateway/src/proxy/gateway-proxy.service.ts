@@ -1,5 +1,11 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import {
+  INTERNAL_SIGNATURE_HEADER,
+  INTERNAL_TIMESTAMP_HEADER,
+  INTERNAL_USER_ID_HEADER,
+  InternalSignerService,
+} from '../security/internal-signer.service.js';
 
 type ForwardOptions = {
   baseUrl: string;
@@ -22,7 +28,10 @@ export class GatewayProxyService {
   private readonly ssoServiceUrl: string;
   private readonly bankServiceUrl: string;
 
-  public constructor(configService: ConfigService) {
+  public constructor(
+    configService: ConfigService,
+    private readonly internalSignerService: InternalSignerService,
+  ) {
     this.ssoServiceUrl =
       configService.get<string>('SSO_SERVICE_URL') ?? configService.getOrThrow<string>('GATEWAY_SSO_URL');
     this.bankServiceUrl =
@@ -50,7 +59,7 @@ export class GatewayProxyService {
       controller.abort();
     }, TIMEOUT_MS);
 
-    const headers = this.buildHeaders(options.headers, options.userId);
+    const headers = this.buildHeaders(options);
     const requestInit = this.createRequestInit(options.method, headers, options.body, controller.signal);
 
     try {
@@ -103,9 +112,9 @@ export class GatewayProxyService {
     };
   }
 
-  private buildHeaders(sourceHeaders: Record<string, string | undefined>, userId?: string): Headers {
+  private buildHeaders(options: ForwardOptions): Headers {
     const headers = new Headers();
-    for (const [name, value] of Object.entries(sourceHeaders)) {
+    for (const [name, value] of Object.entries(options.headers)) {
       if (!value) {
         continue;
       }
@@ -118,8 +127,16 @@ export class GatewayProxyService {
       headers.set(lowerName, value);
     }
 
-    if (userId) {
-      headers.set('x-user-id', userId);
+    if (options.userId) {
+      const { timestamp, signature } = this.internalSignerService.sign(
+        options.method,
+        options.path,
+        options.userId,
+      );
+
+      headers.set(INTERNAL_USER_ID_HEADER, options.userId);
+      headers.set(INTERNAL_TIMESTAMP_HEADER, timestamp);
+      headers.set(INTERNAL_SIGNATURE_HEADER, signature);
     }
 
     return headers;

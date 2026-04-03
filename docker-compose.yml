@@ -71,7 +71,8 @@ services:
       BANK_PORT: ${BANK_PORT:-3002}
       BANK_DATABASE_URL: postgres://${POSTGRES_BANK_USER:-postgres}:${POSTGRES_BANK_PASSWORD:-postgres}@postgres-bank:5432/${POSTGRES_BANK_DB:-bank_db}
       BANK_MOCKAPI_BASE_URL: ${BANK_MOCKAPI_BASE_URL:-https://mockapi.io}
-      BANK_INTERNAL_HMAC_SECRET: ${BANK_INTERNAL_HMAC_SECRET:-replace-with-secure-internal-hmac-secret}
+      INTERNAL_SIGNATURE_SECRET: ${INTERNAL_SIGNATURE_SECRET:-replace-with-secure-internal-signature-secret}
+      INTERNAL_SIGNATURE_MAX_SKEW_SECONDS: ${INTERNAL_SIGNATURE_MAX_SKEW_SECONDS:-90}
     ports:
       - '${BANK_PORT:-3002}:3002'
     depends_on:
@@ -92,7 +93,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:-replace-with-secure-shared-jwt-secret}
       SSO_SERVICE_URL: http://sso:3001
       BANK_SERVICE_URL: http://bank-accounts:3002
-      GATEWAY_INTERNAL_HMAC_SECRET: ${GATEWAY_INTERNAL_HMAC_SECRET:-replace-with-secure-internal-hmac-secret}
+      INTERNAL_SIGNATURE_SECRET: ${INTERNAL_SIGNATURE_SECRET:-replace-with-secure-internal-signature-secret}
     ports:
       - '${GATEWAY_PORT:-3000}:3000'
     depends_on:
