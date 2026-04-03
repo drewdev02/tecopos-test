@@ -33,8 +33,8 @@ describe('AuthService', () => {
   let jwtService: { sign: jest.Mock };
   let queryBuilder: QueryBuilderMock;
 
-  const hashMock = bcrypt.hash as jest.MockedFunction<typeof bcrypt.hash>;
-  const compareMock = bcrypt.compare as jest.MockedFunction<typeof bcrypt.compare>;
+  const hashMock = bcrypt.hash as jest.Mock<Promise<string>, [string, number]>;
+  const compareMock = bcrypt.compare as jest.Mock<Promise<boolean>, [string, string]>;
 
   beforeEach(async () => {
     queryBuilder = {

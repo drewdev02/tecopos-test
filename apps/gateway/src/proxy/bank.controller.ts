@@ -1,5 +1,13 @@
 import { Controller, Delete, Get, HttpCode, HttpStatus, Post, Req } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { GatewayProxyService } from './gateway-proxy.service.js';
 
 type ProxyRequest = {
@@ -35,6 +43,7 @@ export class BankController {
 
   @Get('accounts/:id')
   @ApiOperation({ summary: 'Proxy account details to bank-accounts service' })
+  @ApiParam({ name: 'id', description: 'Account ID' })
   @ApiOkResponse({ description: 'Proxied response from bank service' })
   public async getAccount(@Req() request: ProxyRequest): Promise<unknown> {
     const result = await this.proxyService.forwardToBank({
@@ -49,6 +58,9 @@ export class BankController {
 
   @Get('accounts/:id/transactions')
   @ApiOperation({ summary: 'Proxy account transactions to bank-accounts service' })
+  @ApiParam({ name: 'id', description: 'Account ID' })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (min 1)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Page size (1-100)' })
   @ApiOkResponse({ description: 'Proxied response from bank service' })
   public async getTransactions(@Req() request: ProxyRequest): Promise<unknown> {
     const result = await this.proxyService.forwardToBank({
@@ -103,6 +115,7 @@ export class BankController {
   @Delete('webhooks/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Proxy webhook deletion to bank-accounts service' })
+  @ApiParam({ name: 'id', description: 'Webhook ID' })
   public async deleteWebhook(@Req() request: ProxyRequest): Promise<void> {
     await this.proxyService.forwardToBank({
       method: request.method,
