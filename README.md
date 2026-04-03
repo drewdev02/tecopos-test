@@ -158,7 +158,9 @@ Canonical names are shared and consistent across services where applicable.
 - `BANK_PORT` (default `3002`)
 - `BANK_DATABASE_URL` (required, postgres URI)
 - `MOCKAPI_BASE_URL` (required)
+- `BANK_UPSTREAM_MODE` (`memory` | `hybrid` | `mockapi`, default `memory` in docker-compose for local demo)
 - `MOCKAPI_TIMEOUT_MS` (default `2000`, range `500-30000`)
+- `BANK_UPSTREAM_MODE` (default `hybrid`): `mockapi` (strict upstream), `hybrid` (MockAPI + in-memory fallback), `memory` (in-memory only for local demo)
 
 ### Legacy aliases (backward compatibility)
 

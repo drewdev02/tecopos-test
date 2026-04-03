@@ -6,6 +6,7 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { RandomBankClient } from './random-bank.client.js';
 import type { BankAccount, BankTransaction } from './types/bank-account.types.js';
 
 type AccountsResponse = {
@@ -24,29 +25,60 @@ export const FETCH_CLIENT = Symbol('FETCH_CLIENT');
 type FetchClient = typeof fetch;
 
 const DEFAULT_TIMEOUT_MS = 2_000;
+type UpstreamMode = 'mockapi' | 'hybrid' | 'memory';
 
 @Injectable()
 export class MockBankClient {
   private readonly baseUrl: string;
   private readonly timeoutMs: number;
+  private readonly upstreamMode: UpstreamMode;
 
   public constructor(
     configService: ConfigService,
     @Inject(FETCH_CLIENT) private readonly fetchClient: FetchClient,
+    private readonly randomBankClient: RandomBankClient,
   ) {
-    this.baseUrl = configService.getOrThrow<string>('bank.mockApiBaseUrl');
+    this.upstreamMode = (configService.get<UpstreamMode>('bank.upstreamMode') ?? 'hybrid') as UpstreamMode;
+    this.baseUrl =
+      this.upstreamMode === 'memory' ? (configService.get<string>('bank.mockApiBaseUrl') ?? '') : configService.getOrThrow<string>('bank.mockApiBaseUrl');
     this.timeoutMs = configService.get<number>('bank.mockApiTimeoutMs') ?? DEFAULT_TIMEOUT_MS;
   }
 
   public async listAccounts(userId: string): Promise<AccountsResponse> {
-    const response = await this.fetchJson<BankAccount[]>(`accounts?userId=${encodeURIComponent(userId)}`);
-    return { items: response };
+    if (this.upstreamMode === 'memory') {
+      return this.randomBankClient.listAccounts(userId);
+    }
+
+    try {
+      const response = await this.fetchJson<BankAccount[]>(`accounts?userId=${encodeURIComponent(userId)}`);
+      return { items: response };
+    } catch (error) {
+      if (this.shouldUseFallback(error)) {
+        return this.randomBankClient.listAccounts(userId);
+      }
+
+      throw error;
+    }
   }
 
   public async getAccountById(userId: string, accountId: string): Promise<BankAccount> {
-    const response = await this.fetchJson<BankAccount[]>(
-      `accounts?id=${encodeURIComponent(accountId)}&userId=${encodeURIComponent(userId)}`,
-    );
+    if (this.upstreamMode === 'memory') {
+      return this.randomBankClient.getAccountById(userId, accountId);
+    }
+
+    let response: BankAccount[];
+
+    try {
+      response = await this.fetchJson<BankAccount[]>(
+        `accounts?id=${encodeURIComponent(accountId)}&userId=${encodeURIComponent(userId)}`,
+      );
+    } catch (error) {
+      if (this.shouldUseFallback(error)) {
+        return this.randomBankClient.getAccountById(userId, accountId);
+      }
+
+      throw error;
+    }
 
     const account = response[0];
     if (!account) {
@@ -68,23 +100,48 @@ export class MockBankClient {
     page: number,
     limit: number,
   ): Promise<TransactionsResponse> {
+    if (this.upstreamMode === 'memory') {
+      return this.randomBankClient.listTransactions(userId, accountId, page, limit);
+    }
+
     const normalizedPage = Math.max(page, 1);
     const normalizedLimit = Math.min(Math.max(limit, 1), 100);
     const offset = (normalizedPage - 1) * normalizedLimit;
 
     const baseQuery = `transactions?accountId=${encodeURIComponent(accountId)}&userId=${encodeURIComponent(userId)}`;
 
-    const [items, total] = await Promise.all([
-      this.fetchJson<BankTransaction[]>(`${baseQuery}&_start=${offset}&_limit=${normalizedLimit}`),
-      this.fetchCount(baseQuery),
-    ]);
+    try {
+      const [items, total] = await Promise.all([
+        this.fetchJson<BankTransaction[]>(`${baseQuery}&_start=${offset}&_limit=${normalizedLimit}`),
+        this.fetchCount(baseQuery),
+      ]);
 
-    return {
-      items,
-      page: normalizedPage,
-      limit: normalizedLimit,
-      total,
-    };
+      return {
+        items,
+        page: normalizedPage,
+        limit: normalizedLimit,
+        total,
+      };
+    } catch (error) {
+      if (this.shouldUseFallback(error)) {
+        return this.randomBankClient.listTransactions(userId, accountId, page, limit);
+      }
+
+      throw error;
+    }
+  }
+
+  private shouldUseFallback(error: unknown): boolean {
+    if (this.upstreamMode !== 'hybrid') {
+      return false;
+    }
+
+    if (!(error instanceof HttpException)) {
+      return false;
+    }
+
+    const status = error.getStatus();
+    return status === 503 || status === 504;
   }
 
   private async fetchCount(path: string): Promise<number | undefined> {

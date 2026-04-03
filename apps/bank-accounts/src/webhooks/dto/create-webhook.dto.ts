@@ -1,10 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsEnum, IsOptional, IsUrl } from 'class-validator';
+import { IsBoolean, IsEnum, IsOptional, IsString, MinLength } from 'class-validator';
 import { WebhookEvent } from '../webhook.entity.js';
 
 export class CreateWebhookDto {
-  @ApiProperty({ format: 'uri', example: 'https://example.com/webhooks/bank' })
-  @IsUrl({ require_tld: true, require_protocol: true })
+  @ApiProperty({ example: 'webhook-endpoint-1' })
+  @IsString()
+  @MinLength(1)
   public url!: string;
 
   @ApiProperty({ enum: WebhookEvent, enumName: 'WebhookEvent' })

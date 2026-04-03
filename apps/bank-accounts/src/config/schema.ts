@@ -6,6 +6,7 @@ export const bankValidationSchema = Joi.object({
   BANK_DATABASE_URL: Joi.string().uri({ scheme: ['postgres', 'postgresql'] }).required(),
   MOCKAPI_BASE_URL: Joi.string().uri({ scheme: ['http', 'https'] }).optional(),
   MOCKAPI_TIMEOUT_MS: Joi.number().integer().min(500).max(30_000).default(2_000),
+  BANK_UPSTREAM_MODE: Joi.string().valid('mockapi', 'hybrid', 'memory').default('hybrid'),
   INTERNAL_SIGNATURE_SECRET: Joi.string().min(16).optional(),
   INTERNAL_SIGNATURE_MAX_SKEW_SECONDS: Joi.number().integer().min(30).max(300).default(90),
 
@@ -14,6 +15,5 @@ export const bankValidationSchema = Joi.object({
   BANK_INTERNAL_HMAC_SECRET: Joi.string().min(16).optional(),
   BANK_INTERNAL_SIGNATURE_MAX_SKEW_SECONDS: Joi.number().integer().min(30).max(300).optional(),
 })
-  .or('MOCKAPI_BASE_URL', 'BANK_MOCKAPI_BASE_URL')
   .or('INTERNAL_SIGNATURE_SECRET', 'BANK_INTERNAL_HMAC_SECRET')
   .unknown(true);
