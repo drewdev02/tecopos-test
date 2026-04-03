@@ -6,8 +6,8 @@ Initial bootstrap for the `tecopos-banking-mvp` change using a pnpm workspace an
 
 > Replace these placeholders with your real deployed URLs before final delivery.
 
-- Gateway API (public): `https://<your-gateway-domain>`
-- Swagger (public): `https://<your-gateway-domain>/api/docs`
+- Gateway API (public): `https://tocopost.andrewdevstudio.tech`
+- Swagger (public): `https://tocopost.andrewdevstudio.tech/api/docs`
 
 ## System diagram (high level)
 
