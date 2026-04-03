@@ -2,6 +2,7 @@ import { ArgumentsHost, Catch, ExceptionFilter, HttpException } from '@nestjs/co
 
 type ExceptionResponse = string | { message?: string | string[]; code?: string; error?: string };
 type HttpResponse = {
+  locals: { errorCode?: string };
   status: (statusCode: number) => {
     json: (body: {
       statusCode: number;
@@ -39,6 +40,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     const message = this.extractMessage(responseBody);
     const code = this.extractCode(responseBody, statusCode);
+    response.locals.errorCode = code;
 
     response.status(statusCode).json({
       statusCode,

@@ -100,6 +100,50 @@ Initial bootstrap for the `tecopos-banking-mvp` change using a pnpm workspace an
 - Bank rejects missing/invalid/expired signatures with `401`.
 - Timestamp freshness window is configurable via `INTERNAL_SIGNATURE_MAX_SKEW_SECONDS` (recommended `60-120`).
 
+## Environment variables (canonical contract)
+
+Canonical names are shared and consistent across services where applicable.
+
+### Shared secrets
+
+- `JWT_SECRET` (Gateway + SSO): shared HS256 JWT secret.
+- `INTERNAL_SIGNATURE_SECRET` (Gateway + Bank): shared HMAC secret for internal trust headers.
+- `INTERNAL_SIGNATURE_MAX_SKEW_SECONDS` (Gateway + Bank): accepted timestamp skew window.
+
+### Gateway
+
+- `GATEWAY_PORT` (default `3000`)
+- `SSO_SERVICE_URL` (required)
+- `BANK_SERVICE_URL` (required)
+- `GATEWAY_RATE_LIMIT_TTL_MS` (default `60000`)
+- `GATEWAY_RATE_LIMIT_LIMIT` (default `100`)
+
+### SSO
+
+- `SSO_PORT` (default `3001`)
+- `SSO_DATABASE_URL` (required, postgres URI)
+- `SSO_BCRYPT_ROUNDS` (default `10`, safe range `10-14`)
+- `SSO_AUTH_RATE_LIMIT_TTL_MS` (default `60000`)
+- `SSO_AUTH_RATE_LIMIT_LIMIT` (default `5`)
+
+### Bank Accounts
+
+- `BANK_PORT` (default `3002`)
+- `BANK_DATABASE_URL` (required, postgres URI)
+- `MOCKAPI_BASE_URL` (required)
+- `MOCKAPI_TIMEOUT_MS` (default `2000`, range `500-30000`)
+
+### Legacy aliases (backward compatibility)
+
+The following are still accepted and normalized at startup, but should be migrated:
+
+- `SSO_JWT_SECRET` → `JWT_SECRET`
+- `BANK_MOCKAPI_BASE_URL` → `MOCKAPI_BASE_URL`
+- `GATEWAY_SSO_URL` → `SSO_SERVICE_URL`
+- `GATEWAY_BANK_URL` → `BANK_SERVICE_URL`
+- `GATEWAY_INTERNAL_HMAC_SECRET` / `BANK_INTERNAL_HMAC_SECRET` → `INTERNAL_SIGNATURE_SECRET`
+- `BANK_INTERNAL_SIGNATURE_MAX_SKEW_SECONDS` → `INTERNAL_SIGNATURE_MAX_SKEW_SECONDS`
+
 ## Notes
 
 - This is foundation scaffolding only (no auth/business/DB features yet).

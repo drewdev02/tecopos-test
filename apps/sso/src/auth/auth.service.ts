@@ -24,8 +24,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     configService: ConfigService,
   ) {
-    const rounds = configService.get<number>('SSO_BCRYPT_ROUNDS') ?? 10;
-    this.bcryptRounds = rounds;
+    this.bcryptRounds = configService.getOrThrow<number>('sso.bcryptRounds');
   }
 
   public async register(dto: RegisterRequestDto): Promise<RegisterResponseDto> {

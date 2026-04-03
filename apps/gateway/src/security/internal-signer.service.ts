@@ -18,9 +18,7 @@ export class InternalSignerService {
   private readonly secret: string;
 
   public constructor(configService: ConfigService) {
-    this.secret =
-      configService.get<string>('INTERNAL_SIGNATURE_SECRET') ??
-      configService.getOrThrow<string>('GATEWAY_INTERNAL_HMAC_SECRET');
+    this.secret = configService.getOrThrow<string>('gateway.internalSignatureSecret');
   }
 
   public sign(method: string, path: string, userId: string): { timestamp: string; signature: string } {

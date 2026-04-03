@@ -13,19 +13,26 @@ function sign(secret: string, userId: string, method: string, path: string, time
 function createVerifier(secret: string, skewSeconds = 90): GatewayTrustVerifierService {
   const configStub = {
     get<T>(key: string): T | undefined {
-      if (key === 'INTERNAL_SIGNATURE_SECRET') {
+      if (key === 'bank.internalSignatureSecret') {
         return secret as T;
       }
 
-      if (key === 'INTERNAL_SIGNATURE_MAX_SKEW_SECONDS') {
+      if (key === 'bank.internalSignatureMaxSkewSeconds') {
         return skewSeconds as T;
       }
 
       return undefined;
     },
     getOrThrow<T>(key: string): T {
-      void key;
-      return secret as T;
+      if (key === 'bank.internalSignatureSecret') {
+        return secret as T;
+      }
+
+      if (key === 'bank.internalSignatureMaxSkewSeconds') {
+        return skewSeconds as T;
+      }
+
+      throw new Error(`Unexpected config key: ${key}`);
     },
   } as ConfigService;
 

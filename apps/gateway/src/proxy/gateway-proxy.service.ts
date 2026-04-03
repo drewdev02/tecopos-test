@@ -32,10 +32,8 @@ export class GatewayProxyService {
     configService: ConfigService,
     private readonly internalSignerService: InternalSignerService,
   ) {
-    this.ssoServiceUrl =
-      configService.get<string>('SSO_SERVICE_URL') ?? configService.getOrThrow<string>('GATEWAY_SSO_URL');
-    this.bankServiceUrl =
-      configService.get<string>('BANK_SERVICE_URL') ?? configService.getOrThrow<string>('GATEWAY_BANK_URL');
+    this.ssoServiceUrl = configService.getOrThrow<string>('gateway.ssoServiceUrl');
+    this.bankServiceUrl = configService.getOrThrow<string>('gateway.bankServiceUrl');
   }
 
   public async forwardToSso(options: Omit<ForwardOptions, 'baseUrl'>): Promise<ForwardResult> {

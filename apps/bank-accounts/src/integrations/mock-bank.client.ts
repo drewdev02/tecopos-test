@@ -34,8 +34,8 @@ export class MockBankClient {
     configService: ConfigService,
     @Inject(FETCH_CLIENT) private readonly fetchClient: FetchClient,
   ) {
-    this.baseUrl = configService.getOrThrow<string>('MOCKAPI_BASE_URL');
-    this.timeoutMs = configService.get<number>('MOCKAPI_TIMEOUT_MS') ?? DEFAULT_TIMEOUT_MS;
+    this.baseUrl = configService.getOrThrow<string>('bank.mockApiBaseUrl');
+    this.timeoutMs = configService.get<number>('bank.mockApiTimeoutMs') ?? DEFAULT_TIMEOUT_MS;
   }
 
   public async listAccounts(userId: string): Promise<AccountsResponse> {

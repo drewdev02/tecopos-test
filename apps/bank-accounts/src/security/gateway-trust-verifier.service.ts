@@ -28,13 +28,8 @@ export class GatewayTrustVerifierService {
   private readonly maxSkewSeconds: number;
 
   public constructor(configService: ConfigService) {
-    this.secret =
-      configService.get<string>('INTERNAL_SIGNATURE_SECRET') ??
-      configService.getOrThrow<string>('BANK_INTERNAL_HMAC_SECRET');
-    this.maxSkewSeconds =
-      configService.get<number>('INTERNAL_SIGNATURE_MAX_SKEW_SECONDS') ??
-      configService.get<number>('BANK_INTERNAL_SIGNATURE_MAX_SKEW_SECONDS') ??
-      90;
+    this.secret = configService.getOrThrow<string>('bank.internalSignatureSecret');
+    this.maxSkewSeconds = configService.getOrThrow<number>('bank.internalSignatureMaxSkewSeconds');
   }
 
   public verify(input: VerificationInput): VerificationResult {
