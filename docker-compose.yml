@@ -1,0 +1,112 @@
+services:
+  postgres-sso:
+    image: postgres:16-alpine
+    container_name: tecopos-postgres-sso
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_SSO_DB:-sso_db}
+      POSTGRES_USER: ${POSTGRES_SSO_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_SSO_PASSWORD:-postgres}
+    ports:
+      - '${POSTGRES_SSO_PORT:-5432}:5432'
+    volumes:
+      - postgres-sso-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_SSO_USER:-postgres} -d ${POSTGRES_SSO_DB:-sso_db}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - tecopos-internal
+
+  postgres-bank:
+    image: postgres:16-alpine
+    container_name: tecopos-postgres-bank
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_BANK_DB:-bank_db}
+      POSTGRES_USER: ${POSTGRES_BANK_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_BANK_PASSWORD:-postgres}
+    ports:
+      - '${POSTGRES_BANK_PORT:-5433}:5432'
+    volumes:
+      - postgres-bank-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_BANK_USER:-postgres} -d ${POSTGRES_BANK_DB:-bank_db}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - tecopos-internal
+
+  sso:
+    build:
+      context: .
+      dockerfile: apps/sso/Dockerfile
+    container_name: tecopos-sso
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      SSO_PORT: ${SSO_PORT:-3001}
+      SSO_DATABASE_URL: postgres://${POSTGRES_SSO_USER:-postgres}:${POSTGRES_SSO_PASSWORD:-postgres}@postgres-sso:5432/${POSTGRES_SSO_DB:-sso_db}
+      SSO_JWT_SECRET: ${SSO_JWT_SECRET:-replace-with-secure-shared-jwt-secret}
+    ports:
+      - '${SSO_PORT:-3001}:3001'
+    depends_on:
+      postgres-sso:
+        condition: service_healthy
+    networks:
+      - tecopos-internal
+
+  bank-accounts:
+    build:
+      context: .
+      dockerfile: apps/bank-accounts/Dockerfile
+    container_name: tecopos-bank-accounts
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      BANK_PORT: ${BANK_PORT:-3002}
+      BANK_DATABASE_URL: postgres://${POSTGRES_BANK_USER:-postgres}:${POSTGRES_BANK_PASSWORD:-postgres}@postgres-bank:5432/${POSTGRES_BANK_DB:-bank_db}
+      BANK_MOCKAPI_BASE_URL: ${BANK_MOCKAPI_BASE_URL:-https://mockapi.io}
+      BANK_INTERNAL_HMAC_SECRET: ${BANK_INTERNAL_HMAC_SECRET:-replace-with-secure-internal-hmac-secret}
+    ports:
+      - '${BANK_PORT:-3002}:3002'
+    depends_on:
+      postgres-bank:
+        condition: service_healthy
+    networks:
+      - tecopos-internal
+
+  gateway:
+    build:
+      context: .
+      dockerfile: apps/gateway/Dockerfile
+    container_name: tecopos-gateway
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      GATEWAY_PORT: ${GATEWAY_PORT:-3000}
+      GATEWAY_JWT_SECRET: ${GATEWAY_JWT_SECRET:-replace-with-secure-shared-jwt-secret}
+      GATEWAY_SSO_URL: http://sso:3001
+      GATEWAY_BANK_URL: http://bank-accounts:3002
+      GATEWAY_INTERNAL_HMAC_SECRET: ${GATEWAY_INTERNAL_HMAC_SECRET:-replace-with-secure-internal-hmac-secret}
+    ports:
+      - '${GATEWAY_PORT:-3000}:3000'
+    depends_on:
+      sso:
+        condition: service_started
+      bank-accounts:
+        condition: service_started
+    networks:
+      - tecopos-internal
+
+networks:
+  tecopos-internal:
+    driver: bridge
+
+volumes:
+  postgres-sso-data:
+  postgres-bank-data:

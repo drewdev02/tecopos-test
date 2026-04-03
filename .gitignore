@@ -1,0 +1,17 @@
+.alt
+.DS_Store
+.idea
+.vscode
+.sdd
+node_modules
+dist
+coverage
+.pnpm-store
+.env
+.env.*
+!.env.example
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.agents
