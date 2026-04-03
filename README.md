@@ -2,6 +2,33 @@
 
 Initial bootstrap for the `tecopos-banking-mvp` change using a pnpm workspace and three NestJS services.
 
+## Public deployment
+
+> Replace these placeholders with your real deployed URLs before final delivery.
+
+- Gateway API (public): `https://<your-gateway-domain>`
+- Swagger (public): `https://<your-gateway-domain>/api/docs`
+
+## System diagram (high level)
+
+```text
+Client / Bank Consumer
+        |
+        v
+  [Gateway :3000]
+   - JWT validation
+   - Global rate limit
+   - Internal HMAC signing
+      |                         
+      +-------> [SSO :3001] -----> [Postgres SSO]
+      |           - register/login
+      |
+      +-------> [Bank :3002] ----> [Postgres Bank]
+                  - accounts/transactions (MockAPI proxy)
+                  - webhook CRUD
+                  - verifies gateway signed headers
+```
+
 ## Monorepo structure
 
 ```text
@@ -146,5 +173,5 @@ The following are still accepted and normalized at startup, but should be migrat
 
 ## Notes
 
-- This is foundation scaffolding only (no auth/business/DB features yet).
 - Copy `.env.example` to `.env` and adjust values per environment.
+- Current state includes implemented MVP features for Gateway, SSO, and Bank services, plus unit tests.
