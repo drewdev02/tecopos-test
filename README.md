@@ -176,16 +176,6 @@ Canonical names are shared and consistent across services where applicable.
 - `MOCKAPI_TIMEOUT_MS` (default `2000`, range `500-30000`)
 - `BANK_UPSTREAM_MODE` (default `hybrid`): `mockapi` (strict upstream), `hybrid` (MockAPI + in-memory fallback), `memory` (in-memory only for local demo)
 
-### Legacy aliases (backward compatibility)
-
-The following are still accepted and normalized at startup, but should be migrated:
-
-- `SSO_JWT_SECRET` → `JWT_SECRET`
-- `BANK_MOCKAPI_BASE_URL` → `MOCKAPI_BASE_URL`
-- `GATEWAY_SSO_URL` → `SSO_SERVICE_URL`
-- `GATEWAY_BANK_URL` → `BANK_SERVICE_URL`
-- `GATEWAY_INTERNAL_HMAC_SECRET` / `BANK_INTERNAL_HMAC_SECRET` → `INTERNAL_SIGNATURE_SECRET`
-- `BANK_INTERNAL_SIGNATURE_MAX_SKEW_SECONDS` → `INTERNAL_SIGNATURE_MAX_SKEW_SECONDS`
 
 ## Notes
 
